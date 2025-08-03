@@ -1,89 +1,66 @@
-const markContainer = document.getElementById("mark-container");
-const markBtn = document.getElementById("mark-btn");
-const titleSpan = document.getElementById("problem-title");
+document.addEventListener('DOMContentLoaded', async () => {
+    const { usernames } = await chrome.storage.local.get('usernames');
 
-function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString();
-}
-
-chrome.storage.local.get({ problems: [] }, ({ problems }) => {
-  const today = new Date();
-  const list = document.getElementById("problem-list");
-
-  const due = problems.filter(p => new Date(p.nextReview) <= today);
-
-  due.forEach((p, index) => {
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <a href="${p.url}" target="_blank">${p.title}</a><br/>
-      Next Review: ${formatDate(p.nextReview)}<br/>
-      <button data-index="${index}" data-action="solved">Solved</button>
-      <button data-index="${index}" data-action="failed">Failed</button>
-    `;
-    list.appendChild(li);
-  });
-
-  list.addEventListener("click", (e) => {
-    if (e.target.tagName !== "BUTTON") return;
-
-    const idx = parseInt(e.target.dataset.index);
-    const action = e.target.dataset.action;
-
-    chrome.storage.local.get({ problems: [] }, ({ problems }) => {
-      const prob = problems[idx];
-
-      if (action === "solved") {
-        problems.splice(idx, 1); // Remove from list
-      } else if (action === "failed") {
-        const nextInterval = prob.interval === 3 ? 7 : prob.interval * 2;
-        prob.interval = nextInterval;
-        prob.nextReview = new Date(Date.now() + nextInterval * 24 * 60 * 60 * 1000).toISOString();
-      }
-
-      chrome.storage.local.set({ problems }, () => location.reload());
-    });
-  });
+    if (!usernames || !usernames.leetcode || !usernames.codeforces) {
+        document.getElementById('setupView').classList.remove('hidden');
+    } else {
+        document.getElementById('reviewView').classList.remove('hidden');
+        renderReviewList();
+    }
 });
 
-chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-  const tab = tabs[0];
-  const isSupported = tab.url.includes("leetcode.com/problems") ||
-                      tab.url.includes("codeforces.com/problemset/problem");
+document.getElementById('saveUsernames')?.addEventListener('click', async () => {
+    const leetcode = document.getElementById('leetcodeUser').value.trim();
+    const codeforces = document.getElementById('codeforcesUser').value.trim();
+    if (leetcode && codeforces) {
+        await chrome.storage.local.set({ usernames: { leetcode, codeforces } });
+        document.getElementById('setupView').classList.add('hidden');
+        document.getElementById('reviewView').classList.remove('hidden');
+        renderReviewList();
+    }
+});
 
-  if (!isSupported) {
-    markContainer.style.display = "none";
-    return;
-  }
+async function renderReviewList() {
+    const { problems } = await chrome.storage.local.get({ problems: {} });
+    const listEl = document.getElementById('problem-list');
+    const noReviewsEl = document.getElementById('noReviewsMessage');
+    listEl.innerHTML = '';
 
-  chrome.tabs.sendMessage(tab.id, { action: "getProblemInfo" }, (res) => {
-    if (!res) return;
+    const today = new Date();
+    const dueProblems = Object.values(problems).filter(p => p.nextReview && new Date(p.nextReview) <= today);
 
-    titleSpan.textContent = res.title;
+    if (dueProblems.length === 0) {
+        noReviewsEl.classList.remove('hidden');
+        return;
+    }
+    
+    noReviewsEl.classList.add('hidden');
+    dueProblems.sort((a, b) => new Date(a.nextReview) - new Date(b.nextReview));
 
-    chrome.storage.local.get({ problems: [] }, ({ problems }) => {
-      const already = problems.find(p => p.url === res.url);
-
-      if (already) {
-        markBtn.textContent = "Already Marked";
-        markBtn.disabled = true;
-      } else {
-        markBtn.addEventListener("click", () => {
-          const interval = 3;
-          const nextReview = new Date(Date.now() + interval * 24 * 60 * 60 * 1000).toISOString();
-
-          problems.push({
-            title: res.title,
-            url: res.url,
-            interval,
-            nextReview
-          });
-
-          chrome.storage.local.set({ problems }, () => {
-            markBtn.textContent = "Marked!";
-            markBtn.disabled = true;
-          });
-        });
-      }
+    dueProblems.forEach(problem => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <a href="${problem.url}" target="_blank">${problem.title}</a>
+            <div class="actions">
+                <button data-url="${problem.url}" data-quality="5" title="Knew it well">Easy</button>
+                <button data-url="${problem.url}" data-quality="3" title="Recalled with some effort">Hard</button>
+                <button data-url="${problem.url}" data-quality="0" title="Couldn't remember the solution">Forgot</button>
+            </div>
+        `;
+        listEl.appendChild(li);
     });
-  });
+}
+
+document.getElementById('problem-list').addEventListener('click', (e) => {
+    if (e.target.tagName !== 'BUTTON') return;
+
+    const url = e.target.dataset.url;
+    const quality = parseInt(e.target.dataset.quality, 10);
+
+    chrome.runtime.sendMessage({
+        type: "UPDATE_REVIEW",
+        payload: { url, quality }
+    }, () => {
+        renderReviewList();
+    });
 });

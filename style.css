@@ -1,23 +1,98 @@
 body {
-  font-family: sans-serif;
-  padding: 10px;
-  width: 300px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    width: 380px;
+    padding: 10px;
+    color: #333;
 }
 
 h2 {
-  margin-top: 0;
+    font-size: 18px;
+    margin-top: 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
 }
 
-ul {
-  padding-left: 0;
-  list-style: none;
+p {
+    font-size: 14px;
+    color: #555;
 }
 
-li {
-  margin-bottom: 10px;
+.hidden {
+    display: none;
+}
+
+input[type="text"] {
+    width: calc(100% - 12px);
+    padding: 8px;
+    margin-bottom: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
 }
 
 button {
-  margin-right: 5px;
-  padding: 5px;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    background-color: #007bff;
+    color: white;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+#problem-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+#problem-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 4px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+#problem-list a {
+    text-decoration: none;
+    color: #0056b3;
+    font-size: 15px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+}
+
+#problem-list .actions button {
+    font-size: 12px;
+    padding: 5px 8px;
+    margin-left: 4px;
+    background-color: #f0f0f0;
+    color: #333;
+    font-weight: normal;
+}
+
+#problem-list .actions button:hover {
+    background-color: #ddd;
+}
+
+#problem-list .actions button[data-quality="5"] { background-color: #d4edda; }
+#problem-list .actions button[data-quality="3"] { background-color: #fff3cd; }
+#problem-list .actions button[data-quality="0"] { background-color: #f8d7da; }
+
+#noReviewsMessage {
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+    color: #888;
 }

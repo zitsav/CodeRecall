@@ -2,22 +2,45 @@
   "manifest_version": 3,
   "name": "CodeRecall",
   "version": "1.0",
-  "permissions": ["storage", "activeTab", "scripting"],
+  "description": "Automatically tracks LeetCode and Codeforces problems with spaced repetition.",
+  "permissions": [
+    "storage",
+    "alarms"
+  ],
+  "host_permissions": [
+    "*://*.leetcode.com/*",
+    "*://*.codeforces.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     }
   },
   "content_scripts": [
     {
-      "matches": ["*://*.leetcode.com/problems/*", "*://codeforces.com/problemset/problem/*"],
-      "js": ["content.js"]
+      "matches": [
+        "*://leetcode.com/problems/*"
+      ],
+      "js": [
+        "content_lc.js"
+      ]
+    },
+    {
+      "matches": [
+        "*://codeforces.com/problemset/problem/*",
+        "*://codeforces.com/contest/*/problem/*",
+        "*://codeforces.com/blog/entry/*"
+      ],
+      "js": [
+        "content_cf.js"
+      ]
     }
   ],
-  "background": {
-    "service_worker": "background.js"
+  "icons": {
+    "128": "icons/icon128.png"
   }
 }

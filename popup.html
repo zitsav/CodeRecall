@@ -1,19 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Review Today</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <title>CodeRecall</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h2>Due Problems</h2>
-  <ul id="problem-list"></ul>
+    <div id="setupView" class="hidden">
+        <h2>Setup Required</h2>
+        <p>Please enter your usernames to begin tracking submissions.</p>
+        <input type="text" id="leetcodeUser" placeholder="LeetCode Username">
+        <input type="text" id="codeforcesUser" placeholder="Codeforces Handle">
+        <button id="saveUsernames">Save & Start</button>
+    </div>
 
-  <div id="mark-container" style="background: #e6f0ff; padding: 10px; margin-top: 10px; border-radius: 5px;">
-    <span id="problem-title" style="font-weight: bold;"></span><br>
-    <button id="mark-btn" style="margin-top: 5px;">Mark for Review</button>
-  </div>
+    <div id="reviewView" class="hidden">
+        <h2>Problems to Review</h2>
+        <ul id="problem-list"></ul>
+        <p id="noReviewsMessage" class="hidden">No problems are due for review. Great job! 👍</p>
+    </div>
 
-  <script src="popup.js"></script>
+    <script src="popup.js"></script>
 </body>
 </html>

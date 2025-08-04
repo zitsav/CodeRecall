@@ -2,11 +2,11 @@ function sm2(problem, quality) {
     let { repetitions, easeFactor, interval } = problem;
     if (quality < 3) {
         repetitions = 0;
-        interval = 0;
+        interval = 1;
     } else {
         easeFactor = Math.max(1.3, easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
         if (repetitions === 0) {
-            interval = 0; // Immediate first review
+            interval = 1;
         } else if (repetitions === 1) {
             interval = 6;
         } else {

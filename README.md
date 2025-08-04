@@ -13,7 +13,7 @@ CodeRecall uses Anki's spaced repetition algorithm (SM-2) to decide when you sho
 
 ## Installation
 
-1.  **Download:** Place all the extension files (`manifest.json`, `.js` files, etc.) into a single folder.
+1.  **Download:** Clone the repository code or download the code.
 2.  **Navigate:** Open Google Chrome and go to `chrome://extensions`.
 3.  **Enable Developer Mode:** In the top-right corner, turn on the "Developer mode" toggle.
 4.  **Load Extension:** Click the **Load unpacked** button and select the folder where you saved the files.

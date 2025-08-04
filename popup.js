@@ -26,9 +26,11 @@ async function renderReviewList() {
     const noReviewsEl = document.getElementById('noReviewsMessage');
     listEl.innerHTML = '';
 
-    const today = new Date();
-    const dueProblems = Object.values(problems).filter(p => p.nextReview && new Date(p.nextReview) <= today);
-
+    const now = new Date();
+    const dueProblems = Object.values(problems).filter(p => {
+        if (!p.nextReview) return false;
+        return new Date(p.nextReview) <= now;
+    });
     if (dueProblems.length === 0) {
         noReviewsEl.classList.remove('hidden');
         return;
@@ -40,27 +42,8 @@ async function renderReviewList() {
     dueProblems.forEach(problem => {
         const li = document.createElement('li');
         li.innerHTML = `
-            <a href="${problem.url}" target="_blank">${problem.title}</a>
-            <div class="actions">
-                <button data-url="${problem.url}" data-quality="5" title="Knew it well">Easy</button>
-                <button data-url="${problem.url}" data-quality="3" title="Recalled with some effort">Hard</button>
-                <button data-url="${problem.url}" data-quality="0" title="Couldn't remember the solution">Forgot</button>
-            </div>
+            <a href="${problem.url}" target="_blank" title="Click to solve">${problem.title}</a>
         `;
         listEl.appendChild(li);
     });
 }
-
-document.getElementById('problem-list').addEventListener('click', (e) => {
-    if (e.target.tagName !== 'BUTTON') return;
-
-    const url = e.target.dataset.url;
-    const quality = parseInt(e.target.dataset.quality, 10);
-
-    chrome.runtime.sendMessage({
-        type: "UPDATE_REVIEW",
-        payload: { url, quality }
-    }, () => {
-        renderReviewList();
-    });
-});

@@ -5,7 +5,8 @@
   "description": "Automatically tracks LeetCode and Codeforces problems with spaced repetition.",
   "permissions": [
     "storage",
-    "alarms"
+    "alarms",
+    "notifications"
   ],
   "host_permissions": [
     "*://*.leetcode.com/*",

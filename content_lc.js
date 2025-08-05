@@ -17,5 +17,5 @@ if (window.location.href.includes('/solutions/')) {
             source: "LeetCode",
             title: problemTitle
         });
-    }, 500); 
+    }, 1000); 
 }

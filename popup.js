@@ -1,17 +1,11 @@
 async function isValidLeetCodeUser(username) {
     if (!username) return true;
     try {
-        const response = await fetch('https://leetcode.com/graphql', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                query: `query userPublicProfile($username: String!) { userProfilePublicProfile(username: $username) { username } }`,
-                variables: { username: username }
-            })
-        });
+        const response = await fetch(`https://leetcode-stats-api.herokuapp.com/${username}`);
         const data = await response.json();
-        return !!data.data?.userProfilePublicProfile;
+        return data.status === "success";
     } catch (error) {
+        console.error("Error validating LeetCode user:", error);
         return false;
     }
 }

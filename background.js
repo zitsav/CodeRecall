@@ -26,7 +26,19 @@ async function handleUpdateReview(payload) {
 
     if (problem) {
         console.log(`Background: Updating existing problem: ${problem.title}`);
-        problems[problemUrl] = sm2(problem, payload.quality);
+        if (payload.quality === 5) {
+            problem.consecutiveCorrect = (problem.consecutiveCorrect || 0) + 1;
+        } else {
+            problem.consecutiveCorrect = 0;
+        }
+
+        if (problem.consecutiveCorrect >= 2) {
+            console.log(`Problem "${problem.title}" rated 5 twice in a row. Removing.`);
+            delete problems[problemUrl];
+        } else {
+            problems[problemUrl] = sm2(problem, payload.quality);
+        }
+
     } else {
         console.log(`Background: Creating new problem: "${payload.title}"`);
         const newProblem = {
@@ -39,15 +51,34 @@ async function handleUpdateReview(payload) {
             interval: 0,
             nextReview: null,
             status: 'Reviewing',
-            lastReviewed: new Date().toISOString()
+            lastReviewed: new Date().toISOString(),
+            consecutiveCorrect: 0
         };
+        
         problems[problemUrl] = sm2(newProblem, payload.quality);
+        if (payload.quality === 5) {
+            problems[problemUrl].consecutiveCorrect = 1;
+        }
     }
 
     if (problems[problemUrl] && payload.quality < 3) {
         problems[problemUrl].status = 'Reviewing';
     }
     await chrome.storage.local.set({ problems });
+}
+
+async function handleDeleteProblem(problemUrl) {
+    if (!problemUrl) return;
+    console.log(`Background: Received request to delete problem: ${problemUrl}`);
+    const { problems } = await chrome.storage.local.get({ problems: {} });
+    if (problems[problemUrl]) {
+        const title = problems[problemUrl].title;
+        delete problems[problemUrl];
+        await chrome.storage.local.set({ problems });
+        console.log(`Background: Problem "${title}" deleted successfully.`);
+    } else {
+        console.warn(`Background: Problem "${problemUrl}" not found for deletion.`);
+    }
 }
 
 async function checkSubmissions() {
@@ -94,9 +125,21 @@ async function checkSubmissions() {
             const wrongAttempts = firstCorrectIndex;
             let quality;
             if (wrongAttempts === 0) { quality = 5; } else if (wrongAttempts <= 2) { quality = 4; } else { quality = 3; }
-            console.log(`Auto-rating problem "${problem.title}" with quality ${quality}`);
-            problems[url] = sm2(problem, quality);
-            problems[url].status = 'Solved';
+
+            if (quality === 5) {
+                problem.consecutiveCorrect = (problem.consecutiveCorrect || 0) + 1;
+            } else {
+                problem.consecutiveCorrect = 0;
+            }
+
+            if (problem.consecutiveCorrect >= 2) {
+                console.log(`Problem "${problem.title}" solved correctly twice in a row. Removing.`);
+                delete problems[url];
+            } else {
+                console.log(`Auto-rating problem "${problem.title}" with quality ${quality}`);
+                problems[url] = sm2(problem, quality);
+                problems[url].status = 'Solved';
+            }
             problemsUpdated = true;
         }
     }
@@ -106,11 +149,15 @@ async function checkSubmissions() {
     }
 }
 
-chrome.runtime.onMessage.addListener((message, sender) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log(`Background: Message listener fired for type: ${message.type}`);
     if (message.type === "UPDATE_REVIEW") {
         handleUpdateReview(message.payload);
         return true; 
+    }
+    if (message.type === "DELETE_PROBLEM") {
+        handleDeleteProblem(message.payload.url);
+        return true;
     }
 });
 

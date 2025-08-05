@@ -29,7 +29,6 @@ async function isValidCodeforcesUser(handle) {
 
 document.addEventListener('DOMContentLoaded', async () => {
     const { usernames } = await chrome.storage.local.get('usernames');
-    // Show setup if usernames object doesn't exist or both names are empty
     if (!usernames || (!usernames.leetcode && !usernames.codeforces)) {
         document.getElementById('setupView').classList.remove('hidden');
     } else {
@@ -105,7 +104,26 @@ async function renderReviewList() {
     dueProblems.sort((a, b) => new Date(a.nextReview) - new Date(b.nextReview));
     dueProblems.forEach(problem => {
         const li = document.createElement('li');
-        li.innerHTML = `<a href="${problem.url}" target="_blank" title="Click to solve">${problem.title}</a>`;
+        li.innerHTML = `
+            <a href="${problem.url}" target="_blank" title="${problem.title}">${problem.title}</a>
+            <div class="actions">
+                <button class="delete-btn" data-url="${problem.url}" title="Delete this problem">🗑️</button>
+            </div>
+        `;
         listEl.appendChild(li);
     });
 }
+
+document.addEventListener('click', (event) => {
+    if (event.target.classList.contains('delete-btn')) {
+        const problemUrl = event.target.dataset.url;
+        if (confirm('Are you sure you want to remove this problem?')) {
+            chrome.runtime.sendMessage({
+                type: 'DELETE_PROBLEM',
+                payload: { url: problemUrl }
+            }, () => {
+                renderReviewList();
+            });
+        }
+    }
+});
